@@ -1,6 +1,6 @@
 # Distributed Systems Failure Points
 
-A catalog of 300 production failure modes for distributed systems. Each entry names a specific failure mode and gives a full-paragraph excerpt covering the mechanism, its impact, and how to detect and mitigate it.
+A catalog of 361 production failure modes for distributed systems, including AI agent systems. Each entry names a specific failure mode and gives a full-paragraph excerpt covering the mechanism, its impact, and how to detect and mitigate it.
 
 ## Purpose
 
@@ -8,7 +8,7 @@ Distributed systems fail in a finite, well-understood set of ways: partitions, c
 
 ## Structure
 
-The catalog is a single Markdown file, [`observations.md`](observations.md), organized into 17 categories:
+The catalog is a single Markdown file, [`observations.md`](observations.md), organized into 21 categories:
 
 | Category | Entries |
 |---|---|
@@ -16,8 +16,11 @@ The catalog is a single Markdown file, [`observations.md`](observations.md), org
 | Consensus | 38 |
 | Replication | 24 |
 | Deployment | 21 |
+| AI Agent Orchestration | 21 |
 | Security | 18 |
 | Application | 17 |
+| AI Agent Reliability | 16 |
+| AI Agent Security | 16 |
 | Dependencies | 14 |
 | Storage | 13 |
 | Resources | 13 |
@@ -26,11 +29,14 @@ The catalog is a single Markdown file, [`observations.md`](observations.md), org
 | Operational | 10 |
 | General Software Defects | 9 |
 | Observability | 8 |
+| AI Agent Context & Memory | 8 |
 | Messaging & Events | 7 |
 | Caching | 7 |
 | Operational Process Failures | 5 |
 
 The last two categories are quarantined: **General Software Defects** holds bugs that are not specific to distributed systems (SQL injection, off-by-one errors, integer overflow), and **Operational Process Failures** holds incident-management process failures (postmortem follow-through, escalation paths). They are kept separate so the core catalog stays focused on distributed-systems failure modes.
+
+Four categories cover LLM-based agents and multi-agent systems: **AI Agent Orchestration**, **AI Agent Context & Memory**, **AI Agent Reliability**, and **AI Agent Security**. Agents inherit the classic failure modes above and add their own, because their components are non-deterministic, follow natural-language instructions, and work inside a finite context window.
 
 ## Entry format
 
@@ -55,4 +61,4 @@ Example:
 
 ## Contributing
 
-Entries should name a specific, plausible failure mode and follow the excerpt format above. Avoid tautologies (the cause should not be the effect), vague catch-alls, and bugs that would fail in a single process just as readily as in a distributed system.
+Entries should name a specific, plausible failure mode and follow the excerpt format above. Avoid tautologies (the cause should not be the effect), vague catch-alls, and bugs that would fail in a single process just as readily as in a distributed system. AI agent entries follow the same rule: a mode must be specific to agents, such as context limits, non-determinism, tool use, or inter-agent communication, rather than a general LLM application bug.
