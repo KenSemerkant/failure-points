@@ -19,7 +19,7 @@ A documentation-only catalog of distributed-systems failure modes. There is no c
 ## Editing rules
 
 - **Adding, removing, or reordering an entry renumbers every later entry** in `observations.md`.
-- **Category counts must stay in sync**: the per-category table in `README.md`, the "300" total in both files, and the "17 categories" count in both files must match the actual contents after any change.
+- **Counts must stay in sync**: the per-category table in `README.md` and the stated totals and category counts in both files must match the actual contents after any change.
 - **Entry format is fixed**, in this order: mechanism (what happens and why), impact (what breaks or what is observed), detection and mitigation. One paragraph per entry, written as prose, not bullet points.
 - **New entries must be specific and plausible.** Reject tautologies (cause equals effect), vague catch-alls, and bugs that would fail in a single process just as readily as in a distributed system.
 - The README shows its format example as a blockquote (`>`); the real file uses indented list items. Follow the real file, not the example's quoting.
