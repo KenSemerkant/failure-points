@@ -1,16 +1,16 @@
 ## Operational Process Failures
 
-471. Insufficient audit logging hampering incident investigation
+463. Insufficient audit logging hampering incident investigation
    The system records too little about who changed what and when, so after an incident there is no trail showing which actor or change caused it. Investigators cannot reconstruct the sequence of events, attribution is impossible, and the root cause remains uncertain, delaying remediation and prevention. Detect with an audit coverage review mapping every sensitive action to a log entry and flagging gaps. Mitigate with comprehensive audit logging that captures identity, action, target, and timestamp for all mutations, tamper-evident storage, and retention policies long enough for post-incident analysis.
 
-472. Postmortem action items never implemented
+464. Postmortem action items never implemented
    A postmortem produces a list of action items, but no one is assigned to complete them and nothing tracks them, so the fixes are never implemented. The same failure recurs because the cause was identified but never remediated. Detect by tracking action items in a work system with owners and due dates, and by reviewing their status at regular intervals. Mitigate with explicit ownership for every action item, follow-up review verifying completion, and a policy that blocks a postmortem from closing until its items are assigned.
 
-473. Incident communication failure causing stakeholder confusion
+465. Incident communication failure causing stakeholder confusion
    During an incident, communication is inconsistent, delayed, or contradictory, so stakeholders receive different information and form conflicting pictures. They take uncoordinated or harmful actions, customers are misinformed, and trust erodes even after the technical issue is resolved. Detect with a communication review that checks whether updates were timely, consistent, and accurate, and by surveying stakeholders after the incident. Mitigate with a communication plan defining who updates whom and how often, a single source of truth such as a status page, and templated updates that keep messaging consistent across the lifecycle.
 
-474. Unclear incident severity classification causing wrong response priority
+466. Unclear incident severity classification causing wrong response priority
    An incident is classified at the wrong severity because definitions are vague or inconsistent, so a critical outage is treated as minor and receives a slow, low-priority response. The under-responded issue escalates, customers are impacted longer, and resources are misallocated to less important work. Detect with a severity review checking whether the assigned severity matches the actual impact. Mitigate with clear severity definitions tied to measurable impact such as error rate or revenue loss, a classification checklist at incident open, and periodic calibration so responders assign severities consistently.
 
-475. Incident escalation path misconfiguration causing delayed response
+467. Incident escalation path misconfiguration causing delayed response
    An escalation path is misconfigured, pointing to a stale rotation or dead channel, so when an incident needs a higher tier the page never reaches the right responder. The incident stalls at the wrong level, and the delay compounds because no one notices. Detect with escalation testing that periodically triggers the path and confirms the right responder is reached, and by monitoring for pages that go unacknowledged. Mitigate with validated escalation paths tested on a schedule, automatic fallback to a secondary contact, and alerts on escalation failures.
