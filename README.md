@@ -8,7 +8,7 @@ Distributed systems fail in a finite, well-understood set of ways: partitions, c
 
 ## Structure
 
-The catalog is a single Markdown file, [`observations.md`](observations.md), organized into 21 categories:
+The catalog is an index, [`observations.md`](observations.md), pointing to one Markdown file per category in [`observations/`](observations/). Each file is named after its category in lowercase with hyphens, for example `observations/ai-agent-security.md`. The index lists every file with its entry count and number range. The 21 categories are:
 
 | Category | Entries |
 |---|---|
