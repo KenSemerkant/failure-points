@@ -1,6 +1,6 @@
 # Distributed Systems Failure Points
 
-A catalog of 361 production failure modes for distributed systems, including AI agent systems. Each entry names a specific failure mode and gives a full-paragraph excerpt covering the mechanism, its impact, and how to detect and mitigate it.
+A catalog of 475 production failure modes for distributed systems, including AI agent systems. Each entry names a specific failure mode and gives a full-paragraph excerpt covering the mechanism, its impact, and how to detect and mitigate it.
 
 ## Purpose
 
@@ -12,24 +12,24 @@ The catalog is a single Markdown file, [`observations.md`](observations.md), org
 
 | Category | Entries |
 |---|---|
-| Network | 72 |
+| Network | 81 |
+| Resources | 40 |
 | Consensus | 38 |
+| AI Agent Security | 38 |
+| Security | 32 |
+| Deployment | 32 |
+| AI Agent Reliability | 26 |
 | Replication | 24 |
-| Deployment | 21 |
+| Application | 24 |
 | AI Agent Orchestration | 21 |
-| Security | 18 |
-| Application | 17 |
-| AI Agent Reliability | 16 |
-| AI Agent Security | 16 |
-| Dependencies | 14 |
-| Storage | 13 |
-| Resources | 13 |
+| Dependencies | 16 |
+| Storage | 15 |
+| Data Integrity | 15 |
+| AI Agent Context & Memory | 15 |
 | Clock | 12 |
-| Data Integrity | 12 |
 | Operational | 10 |
 | General Software Defects | 9 |
 | Observability | 8 |
-| AI Agent Context & Memory | 8 |
 | Messaging & Events | 7 |
 | Caching | 7 |
 | Operational Process Failures | 5 |
