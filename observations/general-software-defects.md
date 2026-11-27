@@ -1,28 +1,28 @@
 ## General Software Defects
 
-462. SQL injection in a service querying a shared database
+454. SQL injection in a service querying a shared database
    Unsanitized user input is concatenated into a SQL query, so an attacker can inject SQL that reads, modifies, or deletes data in the shared database beyond the application's intent. Because the database is shared, the compromise extends across every dependent service, exposing or corrupting data at scale. Detect with query logging surfacing suspicious patterns and WAF rules blocking known injection signatures. Mitigate with parameterized queries or an ORM that binds values rather than interpolating them, plus input validation and least-privilege database accounts.
 
-463. Cross-site request forgery on an internal admin panel
+455. Cross-site request forgery on an internal admin panel
    A malicious page causes an authenticated admin's browser to send a request to an internal admin panel, and because the browser automatically attaches the admin's session cookies, the panel treats the forged request as legitimate. The attacker triggers an unintended action such as changing configuration or deleting data without ever having credentials. Detect with origin and referer checks that reject cross-site requests, and by auditing admin actions for unexpected sources. Mitigate with CSRF tokens on every state-changing request, same-site cookies that prevent cross-site attachment, and re-authentication for sensitive admin operations.
 
-464. API key leakage through client-side code
+456. API key leakage through client-side code
    An API key or secret is embedded in client-side code shipped to the browser or mobile app, so anyone inspecting the bundle or decompiling the binary can extract it. The key is compromised and can be used to call the API directly, incurring cost or exfiltrating data. Detect with secret scanning in CI flagging keys committed to client-facing code, and by monitoring for key usage from unexpected sources. Mitigate with server-side proxying so the secret never reaches the client, short-lived or scoped keys, and rotation of any exposed key.
 
-465. Off-by-one error in pagination causing data to be skipped
+457. Off-by-one error in pagination causing data to be skipped
    A pagination implementation uses an incorrect boundary, such as starting the next page at the previous page's last item, so a record at the page boundary is either duplicated or omitted. Clients iterating the full result set miss data or process a record twice, corrupting downstream aggregates or user-visible lists. Detect with boundary tests exercising page-size edges, empty pages, and the final partial page, and by comparing total counts against the sum of pages. Mitigate with correct offset or cursor logic and tests asserting no record is lost or repeated.
 
-466. Integer overflow in a counter causing incorrect metrics
+458. Integer overflow in a counter causing incorrect metrics
    A counter stored in a fixed-width integer type increments past its maximum value and wraps around to a small or negative number, so the reported metric is incorrect. Dashboards show a sudden drop or negative count, alerts fire on false conditions, and billing or quota decisions are wrong. Detect with overflow checks trapping or logging when an increment exceeds the type's range, and by monitoring for counter resets or negative values. Mitigate with wide integer types such as 64-bit, and with saturation arithmetic that clamps at the maximum.
 
-467. Unhandled exception causing process crash
+459. Unhandled exception causing process crash
    An exception propagates up the call stack without being caught, so the runtime terminates the process and the service goes down entirely. All in-flight requests fail, and the outage persists until a supervisor restarts the process. Detect with crash monitoring that alerts on process exits and error tracking that captures the stack trace at the point of failure. Mitigate with top-level exception handlers that log and return a controlled error, supervision that restarts failed processes automatically, and defensive handling around external calls and untrusted input.
 
-468. Null handling differences causing silent data loss
+460. Null handling differences causing silent data loss
    Different services or components treat null values inconsistently, so a null field is dropped by one consumer, coerced to a default by another, or misinterpreted as real by a third. The discrepancy causes silent data loss or corruption that propagates through the pipeline, surfacing as missing records or wrong results. Detect with schema validation enforcing explicit nullability on every field, and with reconciliation checks that compare data across stages. Mitigate with explicit null semantics in the schema, validation at every boundary, and tests exercising null inputs.
 
-469. Floating point precision loss in financial calculations
+461. Floating point precision loss in financial calculations
    Financial amounts are stored and computed in binary floating-point, which cannot represent most decimals, so arithmetic accumulates small rounding errors that compound across many operations. Totals, balances, and interest calculations come out wrong by fractions of a cent that compound into discrepancies, breaking reconciliation and compliance. Detect with precision tests comparing computed results against exact decimal expectations. Mitigate with decimal types or integer cents that represent money exactly, rounding rules applied at defined boundaries, and a ban on floating-point types anywhere money is stored or summed.
 
-470. Data deduplication failure causing duplicate records
+462. Data deduplication failure causing duplicate records
    A deduplication step fails to recognize that an incoming record already exists, so the same logical entity is stored twice. Queries return duplicate rows, aggregates double-count, and downstream consumers process the same item multiple times, corrupting reports and user-visible lists. Detect with uniqueness checks that scan for duplicate keys, and by monitoring for duplicate counts that should be zero. Mitigate with unique constraints at the database level that reject duplicates outright, idempotent writes keyed on a stable identifier, and upsert logic that updates instead of inserting.

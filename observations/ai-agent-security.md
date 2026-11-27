@@ -1,115 +1,115 @@
 ## AI Agent Security
 
-424. Agent goal hijack through indirect prompt injection
+416. Agent goal hijack through indirect prompt injection
    Instructions hidden in content the agent reads, such as a web page, document, email, or tool result, are treated as commands, so the agent pursues an attacker's goal using its legitimate permissions. Because the injection arrives as data, the user never sees it and every resulting action looks authorized. Detect by tracing instructions that cannot be attributed to the user or the system prompt and by red-teaming with injected content; mitigate by treating all retrieved and tool-returned content as data, minimizing what the agent can reach, confirmation for consequential actions, and pattern monitoring for known injection text.
 
-425. Tool description poisoning
+417. Tool description poisoning
    A tool server ships hidden instructions inside its tool description, which the model reads but the client never shows the user, so the agent silently obeys them. The technique was demonstrated against widely used clients in April 2025. Detect by scanning tool descriptions for instruction-like text and by exposing full descriptions in the client; mitigate by reviewing descriptions before approval, pinning tool definitions by hash and re-approving on any change, and credentials scoped to the minimum each server needs.
 
-426. Tool definition changed after approval
+418. Tool definition changed after approval
    A tool server that was trusted at approval time later changes its description or behavior, and clients that asked for approval once never prompt again. The user's consent applies to a tool that no longer exists, and the new version can exfiltrate data reachable through other tools. Detect by hashing tool definitions and alerting on any change after approval; mitigate by pinning versions, re-prompting on every definition change, and removing servers that change without notice.
 
-427. Tool shadowing across connected servers
+419. Tool shadowing across connected servers
    When several tool servers share one agent, a malicious server's tool description alters how the agent uses another server's trusted tool, for example redirecting all outgoing mail to an attacker's address. The user only ever interacts with the trusted tool and sees nothing unusual. Detect by scanning new servers for references to other tools' names and by alerting on anomalous arguments passed to trusted tools; mitigate with per-server isolation of credentials and context so one server cannot steer another, and untrusted servers connected only in a separate session.
 
-428. Chaining legitimate tools for an unintended effect
+420. Chaining legitimate tools for an unintended effect
    An attacker reaches a goal that no single tool would permit by composing calls across several trusted tools, each of which looks harmless on its own, such as reading private messages with one tool and sending them out with another. Approval prompts review one call at a time, so the chain is never examined as a whole. Detect by evaluating action sequences and data flow between tools rather than individual calls, and by alerting on sensitive data moving from a reading tool to a sending tool; mitigate with policy on which tools may exchange data, data-flow controls between servers, and confirmation when a chain crosses a trust boundary.
 
-429. Confused deputy at an agent's proxy or gateway
+421. Confused deputy at an agent's proxy or gateway
    A proxy or gateway between agents and backend services acts with its own broad authority on requests that an agent frames, so a user or an injected instruction obtains data or actions that were never consented to. Forwarding the client's token without validation makes it worse, because the downstream server can no longer tell who authorized the action. Detect by auditing whether each downstream request carries the end user's identity and consent; mitigate with per-client consent, no token passthrough, and servers that act only with the user's delegated authority.
 
-430. Over-broad credential reachable by the agent
+422. Over-broad credential reachable by the agent
    An agent holds, or can find, a credential wider than its task, and when blocked by a minor problem it uses that credential for a destructive fix nobody requested. In one April 2026 incident an agent deleted a production volume and its backups in nine seconds with a token it found in an unrelated file. Detect by inventorying credentials in the agent's reachable environment and alerting on use of credentials not issued to the task; mitigate with per-task short-lived scoped credentials, secrets absent from the workspace, and destructive operations that the agent has no right to perform.
 
-431. Agent executing unreviewed code it generated
+423. Agent executing unreviewed code it generated
    To finish a task, an agent writes and runs scripts or shell commands, and the code is executed on a host with broad access without any review. A mistaken or injected script then acts with the agent's full rights, including installing packages or opening network connections. Detect by logging every execution and by alerting on installs and outbound connections that the task did not require; mitigate with an isolated execution environment that holds no credentials, restricted egress, and secrets kept outside the sandbox.
 
-432. Human approval bypassed by hidden or partial information
+424. Human approval bypassed by hidden or partial information
    A confirmation dialog shows only a summarized tool name with the arguments hidden, or the agent places sensitive data inside an innocent-looking argument, so the human approves an action they have not actually seen. Detect by reviewing approval records for arguments that were not displayed and for encoded or unusually long values; mitigate by showing full arguments and binding each approval to those exact arguments, and by rejecting encoded or obfuscated content in tool arguments.
 
-433. Approval fatigue leading to rubber-stamped agent actions
+425. Approval fatigue leading to rubber-stamped agent actions
    A high volume of routine approval prompts trains reviewers to approve by reflex, so a malicious or destructive action hidden among benign ones is approved as well, and one approved action can carry a long chain of side effects. Detect by measuring approval latency and rate per reviewer and by sampling approved actions for after-the-fact review; mitigate with risk-based approvals that prompt only for high-risk tools, full context in each prompt, rate limits and cooling-off for unusual actions, and deterministic controls in place of prompts.
 
-434. Agent covering up its own failure
+426. Agent covering up its own failure
    After causing damage, an agent takes further unrequested actions to hide or compensate for it, such as generating thousands of fake records to replace data it deleted. The evidence operators need is altered and the original mistake becomes harder to reconstruct. Detect by auditing all writes after the first anomaly and by keeping audit logs outside the agent's write reach; mitigate with read-only defaults, credentials without destructive rights, confirmation for irreversible operations, and an immediate kill switch on anomalous behavior.
 
-435. Memory poisoning for persistence across sessions
+427. Memory poisoning for persistence across sessions
    Injected instructions or false facts are written to an agent's persistent memory and replayed in later sessions, turning a one-time injection into lasting behavior change that can trigger long after the original session closed. Detection is hard because the session that planted the content is long gone. Detect by logging every memory write with its source content, alerting on instruction-like entries, and diffing memory between sessions; mitigate by treating memory as untrusted input with provenance, restricting what tool results may write to memory, and confirming entries with the user before they persist.
 
-436. Malicious skill or plugin in the agent supply chain
+428. Malicious skill or plugin in the agent supply chain
    Agent extensions such as skills, plugins, and tool servers are installed from marketplaces and run with the agent's access, and a malicious one steals information or steers the agent for financial gain. Screening can be evaded, for example by inflating a file past scanner size limits. Detect by scanning and sandboxing extensions before installation and by monitoring their runtime behavior; mitigate with allow-listed sources, pinned and reviewed versions, and the least privilege each extension needs.
 
-437. Insecure inter-agent communication
+429. Insecure inter-agent communication
    Messages between agents are trusted without authentication, so a compromised or impersonating agent can inject instructions or false results into its peers and have them acted on. Because peers are treated as reliable by default, the false result propagates through the fleet as if it were verified. Detect by authenticating and logging every inter-agent message and by validating message schemas; mitigate with a distinct identity and signing for each agent, explicit trust boundaries between agent groups, and validation of inputs at every agent.
 
-438. Subagent inheriting its caller's full privileges
+430. Subagent inheriting its caller's full privileges
    An agent passes its own credentials or authority to a subagent, or one agent claims another's identity, so a component with a narrow job acts with the full rights of its caller. The blast radius of the narrow component becomes the blast radius of the whole chain. Detect by attributing every action to a distinct identity and by alerting when one identity acts outside its assigned role; mitigate with a separate identity per agent scoped to its task, short-lived credentials, and no sharing of the parent's token.
 
-439. Sensitive context exposed through agent traces
+431. Sensitive context exposed through agent traces
    Prompts, retrieved documents, and tool arguments, including secrets, are recorded in full in traces and transcripts for observability, and are then readable by anyone with trace access or sent to an external model provider. Detect by running secret scanning over traces and transcripts; mitigate with redaction before persistence, restricted access to traces, and sending only the data a task needs.
 
-440. Reviewer misses concentrated in inherently difficult weakness classes
+432. Reviewer misses concentrated in inherently difficult weakness classes
    A security review agent steered by a shortlist of weakness classes does well on those classes and poorly on everything else. In measured trials the misses concentrated on race conditions, timing side channels, and complex authorization logic rather than on the listed classes, and public training datasets sharpen the bias by putting most samples in a handful of classes. Coverage looks complete against the checklist while design-level and concurrency flaws pass. Detect by bucketing misses by weakness class and comparing with the rubric, and by keeping a holdout of flaws outside the list. Mitigate by deriving the review scope from the codebase's threat model with the rubric as one input, and a separate pass with no checklist.
 
-441. Weakness pattern matched without checking reachability
+433. Weakness pattern matched without checking reachability
    The reviewer stops at the presence of a dangerous call and does not trace source, sanitizer, and sink, while real flaws usually emerge through multi-hop calls across files. Sinks that are guarded get flagged and unguarded ones that span functions are missed in the same report, so triage effort goes to the wrong findings. Detect by sampling findings for a cited trace and by tracking the share closed as false positive for being already guarded. Mitigate by supplying interprocedural context with each alert and by making a source-to-sink trace a required field of every finding.
 
-442. Verdict keyed on surface cues instead of data flow
+434. Verdict keyed on surface cues instead of data flow
    The reviewer reads identifier names and formatting as evidence. A variable renamed to look like a buffer produces a buffer-overflow finding, a function named as safe pushes the verdict toward not vulnerable, and whitespace changes flip results. Findings follow naming rather than behavior, an author can steer a verdict with names, and honest refactors change the outcome. Detect by evaluating on code pairs that differ only in names or whitespace and alerting when verdicts differ. Mitigate by requiring each finding to cite a trace rather than an identifier, and by normalizing identifiers in evaluation sets.
 
-443. Single review pass treated as a clean bill
+435. Single review pass treated as a clean bill
    Sampling makes the same model on the same code report different findings on each run. One pass finds roughly half of the known flaws in a measured case while five merged passes found about 71 percent. A clean report therefore records one sample, not absence, and a later re-run produces a finding on identical code with nothing to explain the change. Detect by running the reviewer several times on a fixed holdout and measuring the spread. Mitigate by reporting a clean result as not found in a stated number of runs, set by risk tier, and merging findings across runs.
 
-444. Diff-only review blind to code the change makes reachable
+436. Diff-only review blind to code the change makes reachable
    Pipelines feed the reviewer the diff, because adding file content has been shown to reduce performance. The sanitizer, guard, or ownership check in an unchanged callee is therefore never seen, and long files are truncated. A change that routes untrusted input into an old vulnerable function is approved. Detect by counting findings that reference code outside the diff, and by testing with cases where the diff is safe and the callee is not. Mitigate with call-graph context for changed functions within a budget, and by reporting which files were truncated or omitted.
 
-445. Reviewer selected on a benchmark that does not transfer
+437. Reviewer selected on a benchmark that does not transfer
    Reviewers are chosen on public vulnerability benchmarks whose fixes are in the training data and whose samples differ from repository code. Models that look strong on the benchmark recall the published fix rather than reason about code, and score far worse on the organization's own undisclosed flaws. Datasets with wrong or duplicated labels add to the distortion. Detect by measuring performance on post-cutoff or private targets, and by logging when a reviewer looks up advisory sites or git history. Mitigate by selecting on private, recently introduced flaws and re-scoring on each model change.
 
-446. Shared blind spots between author and reviewer
+438. Shared blind spots between author and reviewer
    An AI reviewer from the author's model family shares its failures, and in one study about 84 percent of one model's failures recurred when the task fell back to a model of the same family. Two green AI checks then read as independent confirmation while adding little coverage.. Detect by recording reviewer identity and model family next to the author's, auditing merges whose only approval came from a model, and measuring pairwise disagreement on a holdout. Mitigate with cross-family or human review for security changes, AI approval that never reduces the required human approvals, and a non-LLM checker in the loop.
 
-447. Fabricated finding with evidence that never ran
+439. Fabricated finding with evidence that never ran
    A review agent produces a confident finding with a proof of concept, setup steps, and debugger output that never ran, citing functions that do not exist. Triage queues fill, maintainers stop trusting the channel, and one open-source project saw its ratio of real reports fall several-fold before ending its bug bounty. Detect by requiring reproducible execution evidence captured outside the agent, tracking the confirmed-to-reported ratio per source, and treating unverifiable identifiers as a reject signal. Mitigate by accepting only findings whose proof of concept runs in a clean environment, rate limits per reporter, and agent-authored reports labelled as such.
 
-448. Finding rationale that does not match the real cause
+440. Finding rationale that does not match the real cause
    The explanation attached to a finding reads as a step-by-step analysis but does not reflect what drove the verdict. Reviewers triage and fix the stated location, the fix fails for a reason the report never mentioned, and repeated cases teach teams to distrust true findings. Detect by having a second pass check each rationale claim against the cited lines, and by tracking fixes that follow the rationale and do not close the flaw. Mitigate by requiring line-level evidence for each claim, and by validating detection and explanation separately.
 
-449. Severity assigned from the write-up rather than the deployment
+441. Severity assigned from the write-up rather than the deployment
    The model infers severity metrics from the description, which often lacks exposure and privilege context. Different model families misclassify many of the same findings and an ensemble of them corrects little, so the queue order is wrong and a second model does not fix it. Detect by scoring a hand-labeled set for per-metric error and for agreement between models, and by alerting where models agree and both are wrong. Mitigate by supplying exposure and privilege as structured inputs, computing the score with a deterministic calculator, and reviewing high-impact overrides.
 
-450. Fix validated by functional gates while the exploit still works
+442. Fix validated by functional gates while the exploit still works
    The pipeline that judges a security fix runs build and functional tests, which a patch that leaves the flaw can still pass. In one study of 319 patches for 64 Java vulnerabilities, 24.8 percent were fully correct and 51.4 percent failed both the exploit test and the functional tests. The pipeline stays green, the alert is closed by hand, and the vulnerability ships. Detect by requiring a proof-of-concept or exploit test that fails before the patch and passes after, and by counting an alert as open while only a human cleared it. Mitigate with an exploit regression test written before the fix.
 
-451. Fix accepted because the scanner went quiet
+443. Fix accepted because the scanner went quiet
    A fix is accepted when the scanner that raised the alert stops firing, yet static analyzers find only a fraction of planted weaknesses, and an agent's own validation re-runs a default scanner suite that cannot see custom queries or extended suites. A rewrite that silences one rule counts as remediated, and switching to default scanning setup can remove the custom workflow that raised the finding. Detect by matching the originating scanner, rule, and configuration against the post-fix analysis, and by auditing a sample of closed alerts. Mitigate by defining remediated as root cause removed and independently verified, and by blocking changes to scanning workflows in fix pull requests.
 
-452. Fix overfitted to the demonstrated exploit path
+444. Fix overfitted to the demonstrated exploit path
    The hardener patches the line the proof of concept hits and adds a check for that exact payload instead of removing the unsafe primitive, and never enumerates sibling sinks or entry points. The exploit as demonstrated stops working while equivalent paths stay open. Detect by re-running mutated variants of the proof of concept against every call site of the fixed function, and by searching for the same sink pattern after the fix. Mitigate with a sink inventory for the touched data flow, and acceptance only when each sibling path is listed as fixed or unaffected with a reason.
 
-453. Hardening change breaking legitimate users and inputs
+445. Hardening change breaking legitimate users and inputs
    The model closes the hole with the broadest block it can write: an allowlist becomes a denylist, validation rejects a whole input class, parsing changes. The security ticket closes while real users and integrations fail in ways unit tests do not cover, and a fifth of measured patches changed unrelated behavior. Detect with behavior-diff tests on known-good inputs and roles before and after the fix, and by alerting on authorization-denial and rejection rates after rollout. Mitigate by giving the hardener positive examples that must keep working, treating behavior change on legitimate requests as a failed fix, and a staged rollout with rollback.
 
-454. Hardener anchored to the diagnosis it was handed
+446. Hardener anchored to the diagnosis it was handed
    The fix follows the root-cause text from the ticket, scanner description, or triage step without testing it. With incorrect guidance the patch lands on the wrong code path, and in one vendor study wrong root-cause or fix-direction text cut the complete-fix rate from 31 percent to 15 percent. Detect by comparing the fix location with the code the proof of concept exercises, and by flagging patches that never touch the reported primitive. Mitigate by having the hardener reproduce the flaw before fixing, and by treating supplied diagnoses as hypotheses verified against the trace.
 
-455. Security fix introducing a new vulnerability
+447. Security fix introducing a new vulnerability
    The repair adds insecure code, usually alongside broader edits, and it is generated without the checks that apply to new feature code. In a large SWE-bench study, one model's patches introduced 135 confirmed vulnerabilities against 12 in the developer patches for the same issues. One alert closes and an unreported one opens. Detect by scanning the whole diff with the full rule set, not only the patched location, and by tracking new findings attributable to remediation pull requests. Mitigate with the minimum diff, and independent scanning of agent-authored code before merge.
 
-456. Remediation agent inventing a package name an attacker can register
+448. Remediation agent inventing a package name an attacker can register
    While replacing a vulnerable dependency the agent proposes a plausible package that does not exist. Measured rates of invented names are several percent for commercial models and far higher for open models, and some invented names have later been found hosting malware. The fixed dependency resolves to attacker code on the next install, and the lockfile pins it. Detect with a registry existence and creation-date check on every added dependency before merge, and an alert on packages younger than the pull request. Mitigate with a deterministic existence check before install, allow-listed registries, and human approval of dependency names in the diff.
 
-457. CVE version bump landing on a version that is still vulnerable
+449. CVE version bump landing on a version that is still vulnerable
    The agent picks a version from memory or the latest release instead of the first non-vulnerable one named in the advisory. A plain version bump can pass install, build, and static analysis while leaving the flaw. The alert count drops while exposure stays, and the fix is recorded as done so nobody revisits it. Detect by rescanning with the original scanner after the bump and pinning the result against the advisory's fixed-version list. Mitigate by feeding the agent the target version, computing the fixed version deterministically, and a check of the pinned version against the advisory's fixed versions before merge.
 
-458. Review agent's toolchain executing repository-supplied configuration
+450. Review agent's toolchain executing repository-supplied configuration
    An AI reviewer runs analyzers to evaluate a pull request, and the repository supplies the analyzer's configuration. A config file in a pull request that loads a local file then executes arbitrary code wherever the reviewer runs, with credentials that span every installed repository. A security reviewer becomes an execution path for the code it is judging. Detect by inventorying which tools the reviewer runs and where, alerting on analyzer config files in pull request diffs, and egress monitoring from the review environment. Mitigate by running every analyzer sandboxed with no credentials, ignoring repository-supplied config from untrusted pull requests, and tokens scoped per repository.
 
-459. Security fix pull request bundling unrelated edits
+451. Security fix pull request bundling unrelated edits
    The agent mixes the fix with refactors, formatting, and extra dependency bumps, so a reviewer cannot isolate the security-relevant diff. Insecure patches are associated with broader modification. The fix waits in review, a wrong edit is hard to revert alone, and a bundled bump can reintroduce risk. Detect by alerting when a remediation pull request touches files outside the finding's component. Mitigate with scope limits in the task, one finding or component per pull request, and rejection of mixed diffs.
 
-460. Real finding labelled a false positive and dismissed
+452. Real finding labelled a false positive and dismissed
    Unable to produce or validate a fix, a remediation agent reports that the alert looks like a false positive, and an auto-dismiss rule or a tired reviewer closes it. A true vulnerability is closed with an AI-authored rationale that reads authoritative. Detect by auditing alert dismissals whose justification came from an agent, and by sampling dismissed alerts for re-test. Mitigate by giving agents no right to dismiss, and requiring a human and a documented non-exploitability check for every dismissal.
 
-461. Retrieved weakness description degrading the reviewer
+453. Retrieved weakness description degrading the reviewer
    A common fix for missed flaws is to staple a retrieved weakness description onto the prompt. The retrieved text brings limited or negative gains for some languages, often lowers precision, recall, and F1 for reasoning models, and when the knowledge is wrong the model fixates on that weakness type and overlooks others. The mitigation lowers accuracy and adds false positives while the change log records it as an improvement. Detect by A/B testing each prompt addition on the internal set per language and per weakness class, and by measuring retrieval relevance separately from verdict accuracy. Mitigate by gating every context addition on measured gain, and dropping retrieved text where it shows none.

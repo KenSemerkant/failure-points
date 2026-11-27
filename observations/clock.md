@@ -1,37 +1,34 @@
 ## Clock
 
-144. Clock skew causing lease or lock expiration before actual time
+137. Clock skew causing lease or lock expiration before actual time
    A node whose clock runs fast expires leases and locks before the actual duration has elapsed, releasing resources early. Another node can then acquire the same lease while the first still believes it holds it, breaking mutual exclusion and allowing concurrent access to protected state. Detect by monitoring each node's clock offset against a trusted reference and alerting when skew exceeds the lease safety margin. Mitigate with monotonic clocks for lease timing, which are immune to wall-clock jumps, and NTP discipline to bound skew.
 
-145. Clock drift causing event ordering issues
+138. Clock drift causing event ordering issues
    Nodes with drifting clocks assign timestamps that disagree with the true order of events, so events are ordered incorrectly and causal relationships are lost. Downstream logic that depends on order, such as deduplication or state-machine application, then produces wrong results because it processes events in a sequence that never happened. Detect by comparing timestamps assigned to the same event across nodes and flagging disagreements. Mitigate with logical or hybrid logical clocks that capture causal order without synchronized wall time, so ordering stays correct even when physical clocks drift.
 
-146. Clock drift causing timestamp inconsistencies
+139. Clock drift causing timestamp inconsistencies
    Drifting clocks produce timestamps that are not comparable across nodes, so time-based queries and aggregations return inconsistent results depending on which node stamped the data. A record may appear in the future or past relative to another node, breaking range queries, retention policies, and time-windowed analytics. Detect by monitoring clock offset between nodes and flagging pairs whose skew exceeds a threshold. Mitigate with a single authoritative time source for all writes, and clock-bounded queries that tolerate a declared maximum skew rather than assuming timestamps are exact.
 
-147. Clock drift causing issues in time-based logic
+140. Clock drift causing issues in time-based logic
    Logic that depends on wall-clock time, such as TTLs, rate limits, and scheduling, behaves incorrectly when clocks drift, because the node computes durations from a clock running fast or slow. Expirations fire early or late, rate-limit windows open or close at the wrong moment, and scheduled jobs misfire. Detect by monitoring drift against a reference clock and alerting when it exceeds the tolerance of the time-based logic. Mitigate with monotonic time for durations, which is unaffected by wall-clock adjustments, and NTP to keep wall time accurate for absolute scheduling.
 
-148. NTP synchronization failure leading to significant clock skew
+141. NTP synchronization failure leading to significant clock skew
    When NTP fails, from a network partition, misconfigured server, or dead time source, nodes stop receiving corrections and drift apart, so time-based coordination such as leases and ordering breaks. The skew grows silently until it exceeds the safety margins the system relies on. Detect by monitoring NTP reachability and the offset of each node, alerting when either degrades. Mitigate with redundant time sources so a single NTP failure does not stop synchronization, and clock-bounded failure detection that treats excessive skew as node failure rather than trusting the bad clock.
 
-149. Leap second handling causing timestamp jumps and breaking monotonic clocks
+142. Leap second handling causing timestamp jumps and breaking monotonic clocks
    A leap second inserted or smeared incorrectly causes a wall-clock jump or breaks the assumption that monotonic clocks never go backward, so durations and ordering glitch. Code that computes elapsed time by subtracting wall-clock timestamps can observe a negative or zero duration, and ordering logic can see events out of sequence. Detect by monitoring clock continuity and flagging any backward jump or discontinuity. Mitigate with leap-second smearing that spreads the adjustment over a period, and monotonic clocks for all duration and ordering measurements.
 
-150. Time-sync failures causing issues in time-based distributed algorithms
+143. Time-sync failures causing issues in time-based distributed algorithms
    Algorithms that assume synchronized clocks, such as lease-based locking and timestamp ordering, fail when synchronization is lost, because nodes no longer agree on the current time. Leases may be granted to two nodes at once, and timestamp ordering may place events in the wrong sequence. Detect by monitoring synchronization status and alerting when nodes fall out of sync. Mitigate with algorithms that tolerate bounded skew, remaining correct as long as skew stays within a declared bound rather than assuming perfect synchronization.
 
-151. Network-induced clock drift causing synchronization issues
-   Network delays in the time-sync path cause clocks to drift, because corrections arrive late or are applied based on stale round-trip measurements, so nodes disagree on the current time. The disagreement is worse under congestion or partition, exactly when coordination is most needed. Detect by monitoring sync-path latency and the resulting clock offset, alerting when either grows. Mitigate with redundant sync paths so a slow link does not dominate the correction, and skew-tolerant design that keeps the system correct even when clocks cannot be tightly synchronized.
+144. Network-induced clock drift causing synchronization issues
+   Network delays in the time-sync path cause clocks to drift, because corrections arrive late and an offset computed from a round trip that was delayed in one direction only is wrong. The drift accumulates when the network is consistently slow or asymmetric, and the disagreement is worse under congestion or partition, exactly when coordination is most needed. Detect by monitoring sync-path latency and the resulting clock offset, alerting when either grows. Mitigate with redundant sync paths and multiple time sources so a slow link does not dominate the correction, and outlier rejection that discards corrections whose round-trip time exceeds a threshold.
 
-152. Network-induced delay causing clock synchronization drift
-   Delayed NTP responses cause a node to apply stale time corrections, because the offset it computes is based on a round-trip time that no longer reflects current conditions. The drift accumulates when the network is consistently slow or asymmetric, and the node's timestamps diverge from the cluster. Detect by monitoring NTP round-trip time and rejecting corrections from unusually slow exchanges. Mitigate with multiple time sources so a single slow path does not dominate, and outlier rejection that discards corrections whose round-trip time exceeds a threshold.
-
-153. Monotonic clock reset causing negative duration measurements
+145. Monotonic clock reset causing negative duration measurements
    A monotonic clock that resets, such as across VM migration, suspend, or restore, causes the clock to jump backward, so durations computed by subtracting two monotonic readings become negative. Timeouts fire immediately or never, rate limiters reset, and any logic that assumes monotonic time only moves forward breaks. Detect by validating duration signs and flagging any negative elapsed time as a clock anomaly. Mitigate with monotonic clocks that survive migration and suspend, and defensive checks that clamp or reject negative durations rather than propagating them into timeout and rate-limit logic.
 
-154. Wall clock jump causing scheduler misfires
+146. Wall clock jump causing scheduler misfires
    A manual or NTP-induced wall-clock jump causes scheduled jobs to fire early, late, or repeatedly, because the scheduler computes the next run time from a clock that suddenly moved. A forward jump triggers a burst of overdue jobs, while a backward jump can cause a job to run twice or be skipped. Detect by monitoring clock jumps and alerting when the wall clock moves more than a small threshold. Mitigate with monotonic timers for scheduling, immune to wall-clock adjustments, and jump detection that re-evaluates the schedule after a discontinuity.
 
-155. Clock source failover causing a time jump
+147. Clock source failover causing a time jump
    Failover between clock sources with different offsets causes a sudden time jump, because the node switches to a reference that disagrees on the current time, so in-flight time-based operations misbehave. Leases, timeouts, and ordering logic observe the discontinuity and may act on the wrong time. Detect by monitoring clock continuity and flagging any step change larger than the normal slew rate. Mitigate with gradual slew that adjusts the clock slowly toward the new source, and jump-tolerant logic that treats a discontinuity as a signal to re-validate time-based state.

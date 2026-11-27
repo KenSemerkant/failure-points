@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A documentation-only catalog of distributed-systems failure modes. There is no code, no build system, no test suite, and no package manager. All content lives in an index, a directory of category files, and a README:
 
-- `observations.md` — the index: a table of category, file, entry count, and number range. The catalog holds 475 entries in 21 categories (375 on classic distributed systems, 100 on LLM-based agent systems).
+- `observations.md` — the index: a table of category, file, entry count, and number range. The catalog holds 467 entries in 21 categories (367 on classic distributed systems, 100 on LLM-based agent systems).
 - `observations/` — one Markdown file per category, named after the category in lowercase with hyphens, for example `observations/ai-agent-security.md`.
 - `README.md` — purpose, per-category entry counts, entry format, and contribution rules.
 

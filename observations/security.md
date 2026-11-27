@@ -1,97 +1,97 @@
 ## Security
 
-211. Compromised node injecting malicious messages into the consensus protocol
+203. Compromised node injecting malicious messages into the consensus protocol
    A compromised node sends crafted consensus messages to disrupt agreement, force incorrect commits, or block progress by withholding votes or proposing conflicting values. Because the node holds valid credentials, its messages pass authentication and can stall the cluster or cause it to commit attacker-chosen state. Detect with message authentication tied to node identity, anomaly detection on voting patterns, and divergence checks between replicas; mitigate with Byzantine-fault-tolerant consensus that tolerates a fraction of malicious nodes, and with rapid isolation and rekeying of the compromised member.
 
-212. Certificate expiry causing mutual TLS handshake failures between services
+204. Certificate expiry causing mutual TLS handshake failures between services
    An expired certificate breaks mutual TLS because the peer rejects the presented certificate during the handshake, so services cannot establish secure connections and every inter-service call fails. The outage is total and immediate at the expiry moment, and it affects all callers simultaneously rather than degrading gradually. Detect by monitoring certificate expiry dates and alerting well before the not-after timestamp; mitigate with automated renewal, short-lived certificates that rotate frequently, and a fallback to a certificate authority that can issue replacements without manual intervention.
 
-213. Credential rotation failure causing services to lose access to dependencies
+205. Credential rotation failure causing services to lose access to dependencies
    A rotated credential that is not propagated to every consumer causes the services still holding the old secret to fail authentication, so they lose access to databases or APIs and begin returning errors. The failure is asymmetric: some consumers work while others break, which makes the root cause hard to localize. Detect by monitoring authentication failures immediately after a rotation and correlating them with the rotation event; mitigate with coordinated rotation that updates all consumers atomically, and dual-credential windows where both old and new secrets are accepted during the transition.
 
-214. Token theft enabling unauthorized access to cluster management APIs
+206. Token theft enabling unauthorized access to cluster management APIs
    A stolen token grants an attacker the same privileges as the legitimate holder, allowing them to call cluster management APIs to exfiltrate data, delete resources, or reconfigure the cluster. Because the token is valid, the malicious activity is indistinguishable from authorized use without additional signals. Detect with anomaly detection on token usage such as unusual source IPs, call patterns, or access times; mitigate with short-lived tokens that limit the blast radius, scoped permissions that restrict what a token can touch, and multi-factor authentication for high-privilege operations.
 
-215. Replay attack re-executing captured requests with duplicate side-effects
+207. Replay attack re-executing captured requests with duplicate side-effects
    An attacker captures a valid request and replays it, so a non-idempotent operation such as a payment or state mutation is executed a second time with duplicate side-effects. The replay is accepted because the request is cryptographically valid, and the duplicate may go unnoticed until reconciliation detects the discrepancy. Detect with nonces and timestamps that make each request unique and reject stale or repeated values; mitigate with idempotency keys that deduplicate operations at the server, and request signing that binds the payload to a single use.
 
-216. SSRF vulnerability allowing internal network probing through a public endpoint
+208. SSRF vulnerability allowing internal network probing through a public endpoint
    A server-side request forgery lets an attacker make the service fetch attacker-supplied URLs, so the service reaches internal hosts and cloud metadata endpoints that are not exposed publicly. The attacker can read instance credentials, probe internal services, and pivot deeper into the network using the service's own trust position. Detect with egress monitoring that flags requests to unexpected internal destinations and metadata endpoints; mitigate with URL allow-lists that restrict fetch targets, network egress controls that block the service from reaching internal ranges, and disabling metadata access where possible. An agent with a general-purpose fetch or URL-reading tool widens this surface, because the URLs it requests can come from untrusted retrieved content.
 
-217. Privilege escalation via misconfigured service accounts
+209. Privilege escalation via misconfigured service accounts
    A service account granted more permissions than it needs lets a compromised service access resources far beyond its intended scope, so an attacker who breaches one service can read or modify data across the environment. The excessive permissions are invisible until exploited, and they persist because removing them risks breaking legitimate workflows. Detect with permission audits that compare granted rights against actual usage, and with access logs that reveal anomalous resource access; mitigate with least-privilege policies and periodic access reviews that revoke unused or excessive grants.
 
-218. Secrets leaking into logs during error handling
+210. Secrets leaking into logs during error handling
    Error handling that logs the full request or configuration object leaks secrets such as API keys, tokens, and passwords into logs, which are then accessible to anyone with log read access. The leak is persistent and broad: logs are shipped to centralized systems and retained for long periods, so the secret stays exposed long after the error. Detect with secret scanning on log output and alerting on known secret patterns; mitigate with redaction that strips sensitive fields before logging, structured logging that excludes raw payloads, and rotating any exposed secret. Agent traces are a common source of this leak, because prompts, retrieved documents, and tool arguments are recorded in full for observability.
 
-219. Unencrypted internal traffic allowing eavesdropping on sensitive data
+211. Unencrypted internal traffic allowing eavesdropping on sensitive data
    Internal service-to-service traffic sent in plaintext can be captured by any host sharing the network path, including a compromised container or an insider with packet-capture access. Credentials, tokens, and customer data in transit are exposed, enabling lateral movement and data theft without triggering application-level logs. Detect via traffic inspection and TLS handshake monitoring; mitigate with mutual TLS, service-mesh encryption, and network policies that block plaintext.
 
-220. Authentication bypass via default credentials left in production
+212. Authentication bypass via default credentials left in production
    A deployed service retains vendor or scaffold default usernames and passwords, so an attacker who knows the defaults authenticates without any exploit. The result is full administrative access to the service, allowing data exfiltration, configuration changes, or pivoting to other systems. Detect with credential audits and login anomaly monitoring; mitigate by forcing credential changes on first boot and injecting secrets from a vault.
 
-221. Rate limit bypass allowing resource exhaustion through a public API
+213. Rate limit bypass allowing resource exhaustion through a public API
    An attacker finds a way around rate limiting, such as rotating IPs, spoofing headers, or hitting an unthrottled endpoint, and floods the API with requests. CPU, memory, and connection pools are exhausted, so legitimate users see timeouts and errors while the service degrades or crashes. Detect by monitoring request volume and error rates; mitigate with distributed rate limiting, WAF rules, and per-key quotas.
 
-222. Malicious member joining a consensus group and blocking progress
+214. Malicious member joining a consensus group and blocking progress
    A node that passes membership checks but is controlled by an attacker joins the consensus group and votes to stall agreement or steer decisions. The cluster cannot reach quorum, so writes block and the system becomes unavailable or commits incorrect state. Detect with membership authentication and vote auditing; mitigate with allow-listed membership, identity verification, and Byzantine fault tolerance.
 
-223. Supply-chain compromise injecting malicious code at build time
+215. Supply-chain compromise injecting malicious code at build time
    A compromised dependency, build plugin, or CI step injects malicious code during compilation, so the backdoor is baked into every artifact. Every deployment ships the attacker's code, enabling remote access, data theft, or credential harvesting across the fleet. Detect with dependency scanning, SBOM review, and build attestation; mitigate with pinned, verified dependencies and signed, reproducible artifacts. Runtime-loaded agent components such as skills, plugins, and tool servers are a newer form of this dependency.
 
-224. TLS version downgrade forcing weak cipher negotiation
+216. TLS version downgrade forcing weak cipher negotiation
    An on-path attacker interferes with the handshake to force the client and server to negotiate an old TLS version or weak cipher that is computationally breakable. Traffic is encrypted with cryptography that can be decrypted, exposing credentials and data in transit. Detect by monitoring negotiated protocol versions and cipher suites; mitigate with minimum-version enforcement, cipher allow-lists, and disabling legacy protocols.
 
-225. Insecure deserialization allowing remote code execution
+217. Insecure deserialization allowing remote code execution
    The service deserializes untrusted input without validating the object graph, so an attacker crafts a payload that triggers arbitrary method invocation or gadget chains during reconstruction. The attacker executes code on the receiving service, gaining a shell, exfiltrating data, or moving laterally. Detect with input validation and deserialization logging; mitigate with safe deserialization libraries, schema validation, and rejecting polymorphic types.
 
-226. Encryption key loss making data unrecoverable
+218. Encryption key loss making data unrecoverable
    The key that encrypts data at rest or in transit is lost, deleted, or corrupted, and no usable copy exists, so ciphertext cannot be decrypted. The data is permanently unreadable, effectively destroying records and breaking compliance and recovery guarantees. Detect with key backup verification and restore drills; mitigate with key escrow, hardware security modules, and rotation that retains prior key versions.
 
-227. Side-channel attack leaking timing information across tenants
+219. Side-channel attack leaking timing information across tenants
    A shared service performs operations whose duration depends on secret data, so a co-tenant measures response times to infer another tenant's keys or values. Sensitive data leaks across isolation boundaries without any direct access, undermining multi-tenant security. Detect with timing analysis and differential testing; mitigate with constant-time operations, avoiding secret-dependent branches, and stronger tenant isolation.
 
-228. Insufficient network segmentation allowing lateral movement
+220. Insufficient network segmentation allowing lateral movement
    A flat network lets any compromised node reach every other node, so an attacker who breaches one host can probe and pivot to databases, control planes, and other services. A single compromise escalates into a full environment takeover, expanding the blast radius of any incident. Detect with network flow monitoring and anomaly detection; mitigate with micro-segmentation, zero-trust policies, and default-deny firewall rules.
 
-229. Identity webhook failing open and leaving pods on the node role
+221. Identity webhook failing open and leaving pods on the node role
    An admission webhook that injects workload identity is configured to fail open, so when it is down or restarting, pods are admitted without the injected role settings and token volume. The credential chain in the SDK then falls through to the node's own instance role. The result is rare permission errors or actions taken under broader credentials than intended, with no deployment to explain it. Detect by alerting on API audit entries where the identity webhook did not mutate a pod, and on pods missing the injected role. Mitigate by failing closed, shutting the webhook down gracefully, and blocking access to the node metadata service from pods.
 
-230. Metadata service hop limit blocking credentials from containers
+222. Metadata service hop limit blocking credentials from containers
    The token request to the instance metadata service enforces a default hop limit of one, and traffic from a pod passes through the node's network stack, which adds a hop. The request hangs or fails, so pods that use the node role, or a credential chain that reaches it, get credential timeouts and failed API calls, often right after the metadata service is enforced or the network plugin changes. Detect by probing the token endpoint from a test pod and by logging credential provider errors. Mitigate with a hop limit of two or more on container hosts, and workload identity in place of the node role.
 
-231. Pinned identity provider certificate breaking on certificate rotation
+223. Pinned identity provider certificate breaking on certificate rotation
    A federated trust can pin the thumbprint of the top intermediate authority that signs the identity provider's TLS certificate. When the provider changes that authority or its chain, every federation request fails until the thumbprint list is updated. All federated workloads, including in-cluster identity and CI pipelines, fail at once with an invalid token error and no code change. Detect by monitoring the expiry and chain of the provider's certificate and by alerting on failed federation requests per provider. Mitigate with a provider whose chain comes from a trusted public authority, several stored thumbprints, and a rehearsed re-creation of the trust.
 
-232. Stale signing key cache rejecting new tokens after rotation
+224. Stale signing key cache rejecting new tokens after rotation
    Validators cache the identity provider's public signing keys for several minutes. After a key rotation, freshly issued tokens carry a key identifier the cache does not know and are rejected until the cache expires. Every service that caches keys returns a burst of authentication failures for valid tokens on each rotation. Detect by alerting on authentication failures that carry an unknown key identifier and by tracking key-set fetch failures. Mitigate by refetching the key set on an unknown identifier with a rate limit, by publishing a new key before signing with it, and by overlapping keys.
 
-233. Token audience left unvalidated
+225. Token audience left unvalidated
    A service validates a token's signature and expiry but not the audience it was issued for, so a token minted for one API is accepted by another. Where the validation is delegated, an omitted audience parameter makes the check run against the wrong audience. A token for one service then works on a different service, which is a path to privilege escalation. Detect by presenting a token with a foreign audience to every validator in tests, and by auditing validator configuration. Mitigate by checking audience and issuer explicitly, passing the audience to any delegated check, and requesting audience-scoped tokens.
 
-234. Long-running process holding a credential past its expiry
+226. Long-running process holding a credential past its expiry
    Temporary credentials expire by design: a projected service account token is rotated by the kubelet on a schedule, and a session obtained by assuming a role with temporary credentials is capped at one hour. A process that reads the credential once at startup, or a job that caches it for longer than the session, keeps using it after expiry. Long-running clients such as operators, webhooks, and migration jobs then fail authentication partway with no deploy. Detect by alerting on expired-token errors per consumer and on job length against session length. Mitigate with credential providers that reload or re-assume, and by avoiding role chaining for long jobs.
 
-235. Federated trust condition no longer matching the subject claim
+227. Federated trust condition no longer matching the subject claim
    Cloud trust policies for federated identity match a subject string that the identity provider builds from repository, environment, or ref. A change in environment, branch, or the provider's subject format breaks the match, and the assume-role call is denied with no change to the policy itself. Detect by logging denied assume-role events and by recording and diffing the subject of a canary job. Mitigate with explicit patterns per environment rather than an exact match, and by testing the trust after any provider change.
 
-236. Canceled request desynchronizing a shared connection pool
+228. Canceled request desynchronizing a shared connection pool
    A request on a pooled connection is canceled after its command has been queued but before its response has been read. The next request on that connection reads the leftover response, and when the type happens to match it returns another user's data. The leak surfaces as cross-tenant data in responses and as errors on unrelated requests. Detect by asserting that every result carries the requesting user's identifier, by logging mismatches, and by counting cancellations on shared connections. Mitigate with a client that discards the connection on cancellation, validation of results against the caller, and isolation of connections.
 
-237. Residual disk blocks from a previous tenant
+229. Residual disk blocks from a previous tenant
    Thin-provisioned volumes are allocated with block zeroing disabled, and cached image-layer snapshots keep the old block mappings. A new container that reads the raw block device therefore sees bytes written by the container that used the disk before it, which crosses the tenant boundary the sandbox is meant to enforce. Detect by allocating a disk and reading the raw device for non-zero bytes outside your own writes. Mitigate by keeping zeroing on, invalidating cached layer snapshots, and retiring disks created before the fix.
 
-238. Session-level tenant setting surviving on a pooled connection
+230. Session-level tenant setting surviving on a pooled connection
    Row-level security reads the current tenant from a session setting that is applied with a plain set statement. The setting stays on the pooled connection, and the next request from a different tenant that reuses the connection is filtered by the previous tenant, so one tenant's rows are served to another or the second tenant sees nothing. Detect by asserting that the tenant setting is empty when a connection is checked out, and by testing with interleaved tenants on one pool. Mitigate with the transaction-scoped form of the setting, or a reset when the connection is returned.
 
-239. Application role owning the tables so row-level security never applies
+231. Application role owning the tables so row-level security never applies
    Table owners, superusers, and roles that bypass row-level security are exempt from its policies by default. If the application connects as the owner or as the migration role, every query sees every tenant's rows while the policies exist and look correct. Tests run under a different role pass, and the leak reaches production silently. Detect by auditing role attributes and table ownership, and by running isolation tests as the real application role. Mitigate with a separate non-owner role for the application, forced row-level security on tenant tables, and a rule against the bypass attribute.
 
-240. Shared compute for tenant code holding tenant credentials
+232. Shared compute for tenant code holding tenant credentials
    Sandboxed notebook or agent environments for several tenants run on shared compute, and tenant credentials are kept inside that environment. A flaw in the isolation layer lets one tenant's code obtain the credentials held inside another tenant's environment, including its long-lived account key. In one public case it granted read, write, and delete access to other customers' database accounts, and the provider disabled the feature and told customers to regenerate their account keys. Detect by reviewing which layer actually isolates tenant code, and by checking that no tenant secret persists on a shared host. Mitigate with strong isolation per tenant workload, short-lived per-tenant credentials, and no secrets on shared hosts.
 
-241. Logical cache database treated as a tenant boundary
+233. Logical cache database treated as a tenant boundary
    Each tenant is assigned a logical database number on one cache instance. Logical databases are not a security boundary: any client that can reach the instance can select another tenant's database, and all of them share one process, memory, and I/O. One tenant's load evicts and slows the others. Detect by checking which layer enforces isolation, and by per-database key counts and client output per tenant. Mitigate with key-pattern access rules, tenant-prefixed keys, or separate instances for sensitive tiers.
 
-242. Tenant offboarding unable to erase data under a shared key
+234. Tenant offboarding unable to erase data under a shared key
    Tenant data is encrypted under a platform-wide key, and copies sit in backups, replicas, and derived stores such as search indexes. Deleting a tenant's rows leaves ciphertext and derived copies behind, while destroying the key would make every tenant's data unreadable. Erasure obligations go unmet. Detect by keeping an inventory of every store and key that holds a tenant's data, and by running an erasure drill. Mitigate with a key per tenant deleted at offboarding, and an offboarding checklist that covers derived stores and backups.
