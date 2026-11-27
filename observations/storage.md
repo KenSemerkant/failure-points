@@ -1,0 +1,46 @@
+## Storage
+
+156. Disk space exhaustion preventing write-ahead log persistence
+   When the disk fills, the write-ahead log cannot be persisted, so the node cannot commit new entries and stalls or crashes, refusing to acknowledge writes it cannot durably record. The outage is abrupt and total, since every write depends on the log, and persists until space is freed. Detect by monitoring disk usage and alerting well before the disk reaches capacity, so operators can act while headroom remains. Mitigate with capacity alerts at conservative thresholds, and log retention policies that bound the log's size and reclaim space before exhaustion.
+
+157. Disk full causing unrecorded transitions
+   A full disk prevents state transitions from being recorded, so the node loses track of changes and its state diverges from the cluster. The node may keep serving reads from memory while silently failing to record writes, making the divergence invisible until a restart or failover exposes it. Detect by monitoring write failures and alerting on any failed persistence, not just on disk usage. Mitigate with disk headroom reserved for critical writes, and fail-fast behavior that stops the node cleanly when it cannot persist state.
+
+158. Log truncation due to disk space exhaustion
+   To reclaim space, the log is truncated, discarding entries still needed for replication or recovery, so a replica that falls behind or a node that crashes cannot reconstruct the missing state. The truncation trades short-term space for long-term durability, and the loss surfaces only when recovery fails. Detect by monitoring truncation events and the gap between the truncated position and the oldest entry any replica still needs. Mitigate with adequate retention that keeps entries long enough for all consumers, and tiered storage that moves old entries to cheaper media.
+
+159. Disk failure causing local data loss
+   A failed disk loses the node's local data, so the node must be rebuilt from replicas and the cluster loses redundancy until the rebuild completes. If the failure is not detected promptly, the node may keep serving corrupted or partial data, and a second failure in the degraded window can cause permanent loss. Detect with SMART monitoring that reports disk health and predictive failure indicators before the disk dies. Mitigate with replication so no single disk holds the only copy, and hot-swap replacement that restores the node and redundancy.
+
+160. Disk failure causing local node unreliability
+   A failing disk begins returning intermittent read and write errors as sectors degrade, so the node serves corrupt or missing data while still appearing healthy to the rest of the cluster. Requests that hit the bad regions fail or return stale bytes, and the node's behavior becomes nondeterministic, which can silently poison downstream consumers. Detect by monitoring disk error rates, SMART attributes, and I/O retry counts; mitigate with proactive replacement of degrading drives and replication so a healthy replica can serve reads while the bad node is drained.
+
+161. Disk failure leading to local node data corruption
+   A disk that fails in the middle of a write leaves the target block partially updated, so the stored value is torn and invalid even though the write was acknowledged. If the corrupt value is replicated before detection, the bad data propagates to other nodes and becomes durable, corrupting the logical dataset. Detect by validating checksums on every read and comparing replica digests during anti-entropy; mitigate with atomic writes, write-ahead logging, and replication so a corrupt replica can be rebuilt from a known-good copy.
+
+162. Disk I/O latency causing write-ahead log staleness
+   Slow disk I/O delays the fsync of write-ahead log records, so commits cannot be acknowledged until the log is durable and the node falls behind the cluster's commit point. In-flight transactions stall, replication lag grows, and the node may be marked failed by peers that observe its heartbeats timing out. Detect by monitoring flush latency and the gap between the log head and the committed offset; mitigate with faster storage, group commit batching, and separating the log onto a dedicated low-latency device.
+
+163. Disk IO throttling causing latency spikes in write-ahead logs
+   Cloud volume limits or hypervisor throttling cap the disk's IOPS, so write-ahead log flushes queue behind the throttle and commit latency spikes past client timeouts. Transactions abort or retry, throughput collapses, and the node's lag relative to peers widens until it is suspected of failure. Detect by monitoring I/O throttling metrics such as burst credits and queue depth alongside flush latency; mitigate with provisioned IOPS, write coalescing, and sizing the log device to absorb bursts without hitting the throttle ceiling.
+
+164. Filesystem corruption requiring full rebuild
+   Filesystem corruption renders the node's on-disk state unreadable, so the node cannot recover its local data and must be rebuilt from scratch by streaming state from replicas. The rebuild consumes network bandwidth and recovery time, during which the cluster runs at reduced redundancy and is exposed to further failures. Detect with periodic filesystem checks and checksum validation of stored files; mitigate with journaling filesystems, replication so no single node holds unique data, and fast rebuild paths that restore the node without manual intervention.
+
+165. RAID array degradation causing reduced write throughput
+   After a disk failure, a RAID array drops into a degraded mode where writes must be reconstructed or the array runs without parity, so write throughput falls and the node's commit rate lags behind the cluster. The node accumulates a growing backlog, heartbeats slow, and peers may trigger failover while the array is still rebuilding. Detect by monitoring RAID status, rebuild progress, and per-device write latency; mitigate with hot spares that trigger automatic rebuild, and by sizing arrays so degraded-mode throughput still meets the node's write demand.
+
+166. SSD wear-out causing read errors
+   An SSD near the end of its write endurance begins returning read errors as flash cells lose the ability to retain charge, so previously written data becomes unreadable and the node serves failures or corrupt reads. Because wear-out is gradual, errors appear sporadically and are easy to misattribute to transient faults. Detect by monitoring wear indicators such as media wearout, reallocated sectors, and uncorrectable read error counts; mitigate with wear leveling, over-provisioning, and scheduled replacement of drives before their rated endurance is exhausted.
+
+167. Snapshot storage exhaustion causing backup failures
+   Snapshot storage fills to capacity, so new snapshots cannot be written and the backup pipeline fails, leaving the system without a recent recovery point. The recovery point objective is violated, and operators may not notice until a restore is actually attempted and the expected snapshot is missing. Detect by monitoring snapshot storage utilization and alerting when free space drops below a threshold; mitigate with retention policies that expire old snapshots, tiered storage that moves aged snapshots to cheaper media, and capacity forecasting to provision ahead of growth.
+
+168. Disk latency spike causing write-ahead log flush timeout
+   A transient disk latency spike delays a write-ahead log flush past its configured timeout, so the node aborts the commit and may be marked failed by peers that interpret the stall as a dead node. The aborted transaction is retried, but repeated spikes cause cascading timeouts and churn in cluster membership. Detect by monitoring flush latency percentiles rather than averages, which hide tail spikes; mitigate by aligning flush timeouts to measured storage latency, using deadline-aware I/O, and isolating the log device from bursty workloads.
+
+169. Cluster store quota alarm making the cluster read-only
+   The cluster's backing store enforces a storage quota, and when the backend grows past it the store raises a cluster-wide alarm and rejects every write. The alarm stays raised after space is freed until it is disarmed by hand. Crash-looping workloads and unpruned event and job history fill the space. The API server still serves reads, so the cluster looks alive while no deployment, scale, or controller action can make progress. Detect by tracking the database size against the quota with a wide margin. Mitigate with automatic compaction, periodic defragmentation, pruning of history, and a rehearsed disarm runbook.
+
+170. Volume resize not reaching the running container
+   Expanding a volume has two stages: the backend grows the device, and the filesystem is expanded only when a pod that uses the claim starts. A claim patched in place reports the new size while the running container still writes to a full filesystem. In a stateful set, where the volume template cannot be changed, patched claims and newly created replicas end up with different sizes. Detect with the pending filesystem resize condition on the claim and with disk-full alerts on resized volumes. Mitigate with a rolling restart after each resize and claims kept outside the workload definition.

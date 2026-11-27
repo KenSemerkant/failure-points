@@ -1,0 +1,25 @@
+## Observability
+
+344. Metrics gap hiding a degrading service
+   A missing metric means a degrading service shows no signal, so the degradation goes unnoticed until it becomes an outage. Operators lack the visibility to detect rising latency, errors, or saturation, and the first sign is user-facing failure. Detect with metric coverage review that maps every critical path to an instrumented metric. Mitigate with comprehensive instrumentation on all external calls and resources, and gap analysis that flags unmonitored components.
+
+345. Log loss during high-volume error periods
+   Logs are dropped during high-volume error periods, because buffers overflow or backpressure discards records, so the evidence needed to diagnose the incident is missing. Operators cannot reconstruct the sequence of failures and must guess at the root cause. Detect by monitoring log delivery and alerting on dropped or missing records. Mitigate with buffered, lossless log pipelines that queue and retry, and sampling that preserves error logs while shedding verbose success logs.
+
+346. Tracing sampling missing the failing requests
+   Head-based sampling decides whether to keep a trace before the request completes, so a request that later fails is often discarded because it looked healthy at the decision point. The exact traces needed to reconstruct a rare or intermittent error are absent, leaving engineers to guess at the root cause. Detect by tracking trace coverage against error rates and comparing sampled versus total volume. Mitigate with tail-based sampling that retains traces after completion, plus error-biased sampling that always keeps requests whose status or latency indicates failure. Agent runs are non-deterministic, so a discarded trace cannot be recreated by re-running the request; keep the complete trace for every failed agent run.
+
+347. Alerting misconfiguration causing missed critical alerts
+   An alert rule with a wrong threshold, metric, or label selector never evaluates to true, so the condition it was meant to catch fires nothing and the incident proceeds silently. Operators believe they are protected while the system degrades, and the first signal is a user complaint rather than a page. Detect by replaying known-bad conditions to confirm the rule fires, and by auditing rules against their intended symptoms. Mitigate with alert validation in CI, synthetic checks that exercise the alert path, and periodic review of coverage against SLOs.
+
+348. Dashboard showing stale data misleading operators
+   A dashboard whose data source stopped refreshing, or whose query silently errors and caches an old result, keeps rendering a healthy picture long after the system has degraded. Operators make decisions on a snapshot that no longer reflects reality, delaying response or triggering wrong remediation. Detect by monitoring dashboard freshness, such as the timestamp of the last successful pull, and alerting when it exceeds a threshold. Mitigate with real-time data pipelines, explicit freshness indicators on every panel, and checks that flag panels whose data age exceeds their cadence.
+
+349. Metric cardinality explosion causing storage issues
+   A metric that adds a high-cardinality label such as a user ID or URL path generates a distinct time series for every unique value, so the number of series grows without bound. The monitoring backend's storage and query cost balloons, ingestion slows, and dashboards or alerts time out, degrading the system meant to observe production. Detect by monitoring cardinality per metric and alerting on series-count growth or label churn. Mitigate with label allowlists that reject unbounded dimensions, pre-aggregation of high-cardinality data, and retention or downsampling policies that bound total series.
+
+350. Log format change breaking log parsing
+   A service changes its log format, field order, or timestamp layout without updating downstream parsers, so structured fields no longer match and entries are misparsed or dropped. Monitoring loses the signal it depended on, dashboards go blank, and searches return nothing while the system may be failing. Detect by validating parsers against sample logs in CI and monitoring the rate of unparsed lines. Mitigate with versioned log formats, schema validation on ingest, and a contract test that fails when a producer changes format without a matching parser update.
+
+351. Alert deduplication failure causing alert storms
+   When alert deduplication or grouping breaks, a single underlying fault fans out into hundreds of near-identical notifications, each treated as a distinct alert. Operators are flooded, the real signal is buried in noise, and the on-call engineer wastes time triaging duplicates instead of fixing the cause. Detect by monitoring alert volume and the ratio of unique incidents to notifications, alerting when fan-out spikes. Mitigate with deduplication keys that collapse repeated alerts for the same target and condition, grouping by service, and rate limits that suppress redundant pages.
